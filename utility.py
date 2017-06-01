@@ -1,16 +1,17 @@
 import logging
 from collections import Counter
 from os import name
+from time import time
 
 POLYGLOT = name == "POSIX"
 
 if POLYGLOT:
     from polyglot.text import Text
 from imp import reload
+from konlpy.tag import Komoran
 from nltk import word_tokenize, pos_tag, ne_chunk
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from konlpy.tag import Komoran
 
 class Logging:
     reload(logging)
@@ -46,11 +47,9 @@ def filter_quote(quotes):
 def get_property(items):
     return " ".join([" ".join([item.title, item.content, filter_quote(item.quotes)]) for item in items])
 
-from connection import get_entities
-
-ENTITIES = get_entities()
-def get_similar(keyword, items):
-    entity = " ".join([k for k, v in ENTITIES[keyword]['tag'][:100]])
+def get_similar(keyword, items, entities):
+    entity_tag = list(map(lambda x: (x['tag'], x['value']),entities[keyword]['tags']))
+    entity = " ".join([k for k, v in entity_tag[:100]])
     tfidf_vectorizer = TfidfVectorizer()
     tfidf_matrix_train = tfidf_vectorizer.fit_transform([entity] + items)
     return cosine_similarity(tfidf_matrix_train[0:1], tfidf_matrix_train)[0][1:]
@@ -63,7 +62,7 @@ def extract_entities(text):
         polytext = Text(text)
         for entity in polytext.entities:
             nnps.append(entity[0])
-
+            
     for chunk in ne_chunk(pos_tag(word_tokenize(text))):
         if len(chunk) == 1 and chunk.label() == 'ORGANIZATION':
             nnps.append(chunk.leaves()[0][0])

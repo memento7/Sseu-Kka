@@ -1,57 +1,61 @@
-from os import environ, listdir
-import json
+from os import environ
+from time import sleep
+from typing import Union
 
-from utility import Logging
 import memento_settings as MS
 
-from item import myItem as Item
-import pandas as pd
-import pickle
-import pymysql
+from elasticsearch import Elasticsearch
+import requests
 
-def connection(kwargs=MS.SERVER_RDB_INFO):
-    conn = pymysql.connect(**kwargs,
-                           cursorclass=pymysql.cursors.SSCursor)
-    cur = conn.cursor()
-    return conn, cur
+ES = Elasticsearch(**MS.SERVER_ES_INFO)
 
-def disconnect(conn, cur):
-    cur.close()
-    conn.close()
+def make_clear(results: list,
+               key_lambda=lambda x: x['_id'],
+               value_lambda=lambda x: x,
+               filter_lambda=lambda x: x) -> dict:
+    def clear(result) -> dict:
+        result['_source']['_id'] = result['_id']
+        return result['_source']
+    iterable = filter(filter_lambda, map(clear, results))
+    return {key_lambda(source): value_lambda(source) for source in iterable}
 
-def get_query_result(query, cur, func=list, debug=False):
-    if debug:
-        Logging.log('<<Query Executed>>: {}'.format(query))
-    result = cur.execute(query)
-    if debug:
-        Logging.log('<<Query Result>>: {}'.format(result))
-    return func(cur)
+def get_scroll(query={}, doc_type='', index='information'):
+    array = []
+    def _get_scroll(scroll) -> Union[int, list]:
+        doc = scroll['hits']['hits']
+        array.extend(doc)
+        return True if doc else False
+    scroll = ES.search(index=index, doc_type=doc_type, body=query, scroll='1m', size=1000)
+    scroll_id = scroll['_scroll_id']
+    while _get_scroll(scroll):
+        scroll = ES.scroll(scroll_id=scroll_id, scroll='1m')
+    return make_clear(array)
 
-@Logging
-def get_entities():
-    conn, cur = connection()
+def put_item(item: dict, doc_type: str, index: str):
+    result = ES.index(
+        index=index,
+        doc_type=doc_type,
+        body=item
+    )
+    print(index, doc_type, result['_id'])
+    return result['_id']
 
-    def get_entity(target, cur=cur):
-        def _get_(table, target):
-            query = "SELECT * FROM entity_{} WHERE target={}".format(table, target)
-            func = lambda c: [tuple(v for k, v in zip(c.description, x) if not k[0] in ['id', 'target', 'flag']) for x in c.fetchall()]
-            return get_query_result(query, cur, func)
+def get_clusters() -> dict:
+    return get_scroll({}, index='cluster')
 
-        return {table: _get_(table, target) for table in ['accent', 'link', 'strike', 'tag']}
+def get_entities() -> dict:
+    return get_scroll({}, 'namugrim')
 
-    query = "SELECT id, keyword FROM entity"
-    func = lambda c: [{k[0]:v for k, v in zip(c.description, x)} for x in c.fetchall()]
-    result = get_query_result(query, cur, func, debug=True)
-
-    entities = {entity['keyword']: get_entity(entity['id']) for entity in result}
-    disconnect(conn, cur)
-    return entities
-
-@Logging
-def get_clusters():
-    clusters = []
-    for file in listdir('./pickle'):
-        cluster = pickle.load(open('./pickle/' + file, 'rb'))
-        cluster['keyword'] = file.split('-')[0]
-        clusters.append(cluster)
-    return clusters
+def put_event(host=MS.SERVER_API+'', payload={}, headers={
+        "Content-Type" : "application/json",
+        "charset": "utf-8",
+        "Authorization": environ['MEMENTO_BASIC']
+    }):
+    print (payload)
+    # while True:
+    #     try:
+    #         req = requests.post(host, json=payload, headers=headers)
+    #         return req.text
+    #     except requests.exceptions.ConnectionError:
+    #         sleep(3)
+    #         continue
