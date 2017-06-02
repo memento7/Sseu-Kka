@@ -4,7 +4,6 @@ import numpy as np
 
 from utility import Logging
 from connection import get_clusters, get_entities, put_event
-from utility import start, end
 from utility import get_property, extract_entities, get_similar
 
 MINIMUM_RELATION = 3
