@@ -36,6 +36,8 @@ def process():
 
     print('merge start')
 
+    # post -rel detect
+
     rcluster = []
     for keyword, relation in keywords.items():
         for entity, rel in relation.items():
