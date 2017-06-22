@@ -66,7 +66,9 @@ def request_post(api, payload={}):
             sleep(2)
     response = res.text
     print(response)
-    return json.loads(response)
+    if response:
+        return json.loads(response)
+    return True
 
 def request_get(api, payload={}):
     print ('GET request', api)
