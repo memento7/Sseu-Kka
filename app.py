@@ -140,7 +140,7 @@ clusters = sorted(raw_clusters.values(), key=lambda x: x['topic']['published_tim
 
 # In[121]:
 for cluster in clusters:
-    es.update(index='memento', doc_type='cluster', id=cluster, body={
+    es.update(index='memento', doc_type='cluster', id=cluster['_id'], body={
         'doc': {
             'task': 'doing'
         }
@@ -158,6 +158,9 @@ for idx, cluster in enumerate(clusters):
 
 # In[11]:
 
+if not len(raw_clusters):
+    print('there all done!')
+    exit()
 print ("accuracy: {}\nclusters: {}".format(len(clusters)/len(raw_clusters), len(clusters)))
 
 
@@ -187,7 +190,7 @@ for tar, duplist in duplication.items():
     rel_entities = clusters[tar]['topic']['entities']
     if isinstance(rel_entities, str):
         rel_entities = rel_entities.split(' ')
-    entities = set(clusters[tar]['entity'] + )
+    entities = set(clusters[tar]['entity'] + rel_entities)
     entity = set(clusters[tar]['entity'])
     for dup in duplist:
         items.update(set(clusters[dup]['items']))
@@ -267,7 +270,7 @@ for idx in uniq:
     topic = clusters[idx]['topic']
     clusters[idx]['topic']['entities'] = [entity for entity in 
             [entity for entity in topic['entities'] if entity in 
-             entities_dict] if get_similar(topic['content'], entity) > 0.025]
+             entities_eid] if get_similar(topic['content'], entity) > 0.025]
 
 
 # In[256]:
@@ -304,7 +307,7 @@ def keywords_filter(keywords):
 def title_filter(title):
     def get_readable(text):
         sub_pattern = ['\(.+?\)', '\[.+?\]', '\{.+?\}', '<.+?>', '~~(.+?)~~']
-        del_pattern = ['\'', '\"', '’', '‘', ':']
+        del_pattern = ['\'', '\"', '’', '‘', ':', '“']
         for pattern in sub_pattern:
             text = re.sub(pattern, '', text)
         return [word for word in text.translate(str.maketrans({c:'' for c in del_pattern})).strip().split(' ') if word]
@@ -388,12 +391,14 @@ def push_summarize(content, event_id):
             result = cur.execute(query.format(event_id, a, b, c))
             break
         except:
+            print (result)
             print('summarize:',query.format(event_id, a, b, c))
             print('summarize push error, wait 2s')
             sleep(2)
             continue
     conn.commit()
 
+print ('start push!!')
 for idx in uniq:
     if not idx % 5000: print ("{}/{}".format(idx, len(clusters)))
     cluster = clusters[idx]
@@ -426,7 +431,7 @@ conn.commit()
 disconnect(conn, cur)
 
 for cluster in clusters:
-    es.update(index='memento', doc_type='cluster', id=cluster, body={
+    es.update(index='memento', doc_type='cluster', id=cluster['_id'], body={
         'doc': {
             'task': 'done'
         }
