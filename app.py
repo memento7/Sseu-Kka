@@ -423,9 +423,10 @@ for idx in uniq:
             "url": url,
             "weight": 0
         })
+
     for entity in set(cluster['topic']['entities']):
         if entity in entities_eid:
-            entity_id = entities_eid[entity]
+            entity_id = entities_eid[entity]['eid']
             request_post('persist/entities/{}/events/{}'.format(str(entity_id), str(event_id)))
     push_summarize(cluster['topic']['content'], event_id)
 conn.commit()
