@@ -64,7 +64,9 @@ def request_post(api, payload={}):
         except:
             print ('connection error, wait 2s')
             sleep(2)
-    return json.loads(res.text)
+    response = res.text
+    print(response)
+    return json.loads(response)
 
 def request_get(api, payload={}):
     print ('GET request', api)
@@ -92,20 +94,37 @@ def get_entity_info(entity):
     result = es.get(index='memento', doc_type='namugrim', id=doc['flag'])['_source']
     return result['keyword'], result['nickname'], result['realname'], result['subkey']
 
+def func_call():
+    pass
+
+    slov = ();
+
+
+role_dict = {
+    '배우': 'ACTOR',
+    '가수': 'SINGER',
+    '정치인': 'POLITICIAN',
+    '스포츠선수': 'SPORTS',
+    '그룹가수': 'BAND',
+    '모델': 'MODEL',
+    '코미디언': 'COMEDIAN',
+    '기업인': 'ENTREPRENEUR',
+    '공인': 'PUBLIC_FIGURE',
+}
 def put_new_entity(entity):
     doc = es.get(index='memento',doc_type='entities',id=entity)['_source']
     namugrim = es.get(index='memento',doc_type='namugrim',id=doc['flag'])['_source']
     payload = {
-      "nickname": namugrim['nickname'],
-      "realname": namugrim['realname'],
-      "role_json": {'PERSON':[]},
-      "status": "SHOW",
-      "subkey": namugrim['subkey']
+        "nickname": namugrim['nickname'],
+        "realname": namugrim['realname'],
+        "role_json": {'PERSON':[]},
+        "status": "SHOW",
+        "subkey": namugrim['subkey']
     }
     for role in doc['subkey'] + [namugrim['subkey']]:
         if role in role_dict:
             payload['role_json'][role_dict[role]] = []
-    res = request('persist/entities', payload)
+    res = request_post('persist/entities', payload)
     es.update(index='memento',doc_type='entities',id=entity,body={
         'doc': {
             'eid': res['id']
