@@ -168,11 +168,16 @@ print ("result unique cluster: {}\ntotal duplication: {}".format(len(clusters) -
 
 for tar, duplist in duplication.items():
     items = set(clusters[tar]['items'])
-    entities = set(clusters[tar]['entity'] + clusters[tar]['topic']['entities'])
+    rel_entities = clusters[tar]['topic']['entities']
+    if isinstance(rel_entities, str):
+        rel_entities = rel_entities.split(' ')
+    entities = set(clusters[tar]['entity'] + )
     entity = set(clusters[tar]['entity'])
     for dup in duplist:
         items.update(set(clusters[dup]['items']))
-        entities.update(set(clusters[dup]['entity'] + clusters[dup]['topic']['entities']))
+        rel_entities = clusters[dup]['topic']['entities']
+        if isinstance(rel_entities, str):
+            entities.update(set(clusters[dup]['entity'] + rel_entities))
         entity.update(clusters[dup]['entity'])
     clusters[tar]['items'] = list(items)
     clusters[tar]['entity'] = list(entity)
