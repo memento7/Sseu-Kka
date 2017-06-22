@@ -39,7 +39,7 @@ def get_scroll(body={}, doc_type='', index='memento', time='1m'):
 
 # In[155]:
 
-SERVER_API = 'https://api.memento.live/'
+SERVER_API = 'https://manage.memento.live/api/'
 HEADERS = {"Content-Type" : "application/json",
            "charset": "utf-8",
            "Authorization": environ['MEMENTO_BASIC']}
