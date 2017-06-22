@@ -56,6 +56,7 @@ import re
 # In[159]:
 
 def request_post(api, payload={}):
+    print ('POST request', api)
     while True:
         try:
             res = requests.post(SERVER_API + api, headers=HEADERS, verify=True, json=payload)
@@ -66,6 +67,7 @@ def request_post(api, payload={}):
     return json.loads(res.text)
 
 def request_get(api, payload={}):
+    print ('GET request', api)
     while True:
         try:
             res = requests.get(SERVER_API + api, headers=HEADERS, verify=True, json=payload)
@@ -312,7 +314,6 @@ def title_filter(title):
             text = re.sub(pattern, '', text)
         return [word for word in text.translate(str.maketrans({c:'' for c in del_pattern})).strip().split(' ') if word]
     return " ".join([word for word in get_readable(title) if word not in news_pubs])
-
 
 # In[477]:
 
