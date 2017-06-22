@@ -120,7 +120,17 @@ from collections import defaultdict
 
 # In[6]:
 
-raw_clusters = get_scroll(index='memento',doc_type='cluster')
+raw_clusters = get_scroll(index='memento',doc_type='cluster',body={
+    "query": {
+        "bool": {
+            "mustNot": [{         
+                "exists" : {
+                    "field" : "task"
+                }
+            }]
+        }
+    }
+})
 
 
 # In[120]:
@@ -129,6 +139,12 @@ clusters = sorted(raw_clusters.values(), key=lambda x: x['topic']['published_tim
 
 
 # In[121]:
+for cluster in clusters:
+    es.update(index='memento', doc_type='cluster', id=cluster, body={
+        'doc': {
+            'task': 'doing'
+        }
+    })
 
 clusters = list(filter(lambda x: x['accuracy'] < 1.5, clusters))
 
@@ -408,6 +424,13 @@ for idx in uniq:
     push_summarize(cluster['topic']['content'], event_id)
 conn.commit()
 disconnect(conn, cur)
+
+for cluster in clusters:
+    es.update(index='memento', doc_type='cluster', id=cluster, body={
+        'doc': {
+            'task': 'done'
+        }
+    })
 # In[ ]:
 
 

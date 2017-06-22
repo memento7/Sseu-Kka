@@ -46,7 +46,10 @@ def get_clusters() -> dict:
 def get_entities() -> dict:
     return get_scroll({}, 'namugrim')
 
-def put_event(host=MS.SERVER_API+'', payload={}, headers={
+def put_new_entity(host=MS.SERVER_API,):
+    psas
+
+def put_event(host=MS.SERVER_API, payload={}, headers={
         "Content-Type" : "application/json",
         "charset": "utf-8",
         "Authorization": environ['MEMENTO_BASIC']
