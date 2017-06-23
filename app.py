@@ -436,14 +436,13 @@ for idx in uniq:
         for image in article['imgs']:
             images.append((article['href_naver'], image))
         
-    for source, url in images:
-        request_post('persist/events/{}/images'.format(event_id), {
-            "like_count": 0,
-            "source_link": source,
-            "type": "string",
-            "url": url,
-            "weight": 0
-        })
+    request_post('persist/events/{}/images'.format(event_id), [{
+        "like_count": 0,
+        "source_link": source,
+        "type": "string",
+        "url": url,
+        "weight": 0
+    } for source, url in images])
 
     for entity in set(cluster['topic']['entities']):
         if entity in entities_eid:
