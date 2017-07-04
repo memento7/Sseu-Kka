@@ -219,14 +219,7 @@ for tar, duplist in duplication.items():
         items.update(set(clusters[dup]['items']))
         rel_entities = clusters[dup]['topic']['entities']
         if isinstance(rel_entities, str):
-            if isinstance(clusters[dup]['entity'], list):
-                if len(clusters[dup]['entity']) > 1:
-                    print ("something wrong! entity size extended: {}".format(clusters[dup]['entity']))
-                elif len(clusters[dup]['entity']) <= 0:
-                    clusters[dup]['entity'] = []
-                else:
-                    clusters[dup]['entity'] = clusters[dup]['entity'][0]
-            entities.update(set(clusters[dup]['entity'] + rel_entities))
+            entities.update(set(clusters[dup]['entity'] + [rel_entities]))
         entity.update(clusters[dup]['entity'])
     clusters[tar]['items'] = list(items)
     clusters[tar]['entity'] = list(entity)
