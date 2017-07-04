@@ -222,7 +222,7 @@ for tar, duplist in duplication.items():
             if isinstance(clusters[dup]['entity'], list):
                 if len(clusters[dup]['entity']) > 1:
                     print ("something wrong! entity size extended: {}".format(clusters[dup]['entity']))
-                elif len(clusters[dup]['entity']) < 0:
+                elif len(clusters[dup]['entity']) <= 0:
                     clusters[dup]['entity'] = []
                 else:
                     clusters[dup]['entity'] = clusters[dup]['entity'][0]
