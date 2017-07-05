@@ -408,6 +408,7 @@ def push_summarize(content, event_id):
         summarize.append("")
     a,b,c = summarize
     while True:
+        result = None;
         try:
             result = cur.execute(query.format(event_id, a, b, c))
             break
