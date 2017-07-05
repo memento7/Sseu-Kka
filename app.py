@@ -65,7 +65,6 @@ def request_post(api, payload={}):
             print ('connection error, wait 2s')
             sleep(2)
     response = res.text
-    print(response)
     if response:
         return json.loads(response)
     return True
