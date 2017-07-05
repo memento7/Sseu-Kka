@@ -40,3 +40,4 @@ for cluster in raw_clusters.values():
     es.update(index='memento',doc_type='cluster',id=cluster['_id'],body={
         "script" : "ctx._source.remove(\"task\")"
     })
+    
